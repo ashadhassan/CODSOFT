@@ -1,0 +1,67 @@
+# Task 4: Recommendation System (Content-Based Filtering)
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# -----------------------
+# Step 1: Create Sample Dataset
+# -----------------------
+movies = {
+    'title': [
+        'Inception', 'Avengers', 'Interstellar',
+        'Iron Man', 'The Dark Knight', 'Titanic',
+        'Shutter Island', 'Captain America', 'Thor', 'Gravity'
+    ],
+    'genre': [
+        'Sci-Fi Thriller', 'Action Sci-Fi', 'Sci-Fi Adventure',
+        'Action Sci-Fi', 'Action Thriller', 'Romantic Drama',
+        'Mystery Thriller', 'Action Sci-Fi', 'Fantasy Action', 'Sci-Fi Drama'
+    ]
+}
+
+df = pd.DataFrame(movies)
+
+# -----------------------
+# Step 2: Convert Genres to Vectors using TF-IDF
+# -----------------------
+tfidf = TfidfVectorizer(stop_words='english')
+tfidf_matrix = tfidf.fit_transform(df['genre'])
+
+# -----------------------
+# Step 3: Compute Similarity Score
+# -----------------------
+cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+# -----------------------
+# Step 4: Build Recommendation Function
+# -----------------------
+def recommend_movie(title, top_n=3):
+    # Find movie index
+    idx = df[df['title'] == title].index[0]
+    
+    # Get similarity scores
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    
+    # Sort movies by similarity (descending order)
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    
+    # Ignore first movie (itself) and take top_n
+    sim_scores = sim_scores[1:top_n+1]
+    
+    # Get movie indices
+    movie_indices = [i[0] for i in sim_scores]
+    
+    return df['title'].iloc[movie_indices]
+
+# -----------------------
+# Step 5: Test the Recommendation System
+# -----------------------
+print("🎬 Movies similar to Inception:")
+print(recommend_movie('Inception'))
+
+print("\n🎬 Movies similar to Titanic:")
+print(recommend_movie('Titanic'))
+
+print("\n🎬 Movies similar to Iron Man:")
+print(recommend_movie('Iron Man'))
